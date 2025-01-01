@@ -6,6 +6,12 @@ configure
 config.h*
 Makefile
 Makefile-build
+config.log
+config.status
+autom4te.cache
+
+hexedit.1
+
 
 #compiled object files
 *.o

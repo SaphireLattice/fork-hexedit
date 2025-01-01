@@ -20,6 +20,9 @@ datarootdir = @datarootdir@
 exec_prefix = @exec_prefix@
 mandir = @mandir@
 bindir = @bindir@
+srcdir = @srcdir@
+
+VPATH = @srcdir@
 
 INCL = @INCL@
 SRCS = @SRCS@
