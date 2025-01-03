@@ -5,5 +5,10 @@ test -f configure.ac || {
   exit
 }
 
-autoconf
-autoheader
+mkdir -p build
+pushd ./build
+autoconf ../configure.ac > configure
+autoheader ../configure.ac
+popd
+
+echo "Run \"make\" in the \"./build\" directory to build"
