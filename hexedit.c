@@ -15,6 +15,7 @@
    along with this program; if not, write to the Free Software
    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.*/
 #include "hexedit.h"
+#include <locale.h>
 
 
 /*******************************************************************************/
@@ -31,6 +32,7 @@ int sizeCopyBuffer, *bufferAttr;
 char *progName, *fileName, *baseName;
 unsigned char *buffer, *copyBuffer;
 typePage *edited;
+encodingEntry **encodings, *selectedEncoding;
 
 char *lastFindFile = NULL, *lastYankToAFile = NULL, *lastAskHexString = NULL, *lastAskAsciiString = NULL, *lastFillWithStringHexa = NULL, *lastFillWithStringAscii = NULL;
 
@@ -44,9 +46,9 @@ int colored = FALSE;
 int isReadOnly = FALSE;
 
 const char * const usage = "usage: %s [-s | --sector] [-m | --maximize] [-l<n> | --linelength <n>] [-r | --readonly]"
-#ifdef HAVE_COLORS 
+#ifdef HAVE_COLORS
      " [--color]"
-#endif 
+#endif
      " [-h | --help] filename\n";
 
 
@@ -58,37 +60,42 @@ int main(int argc, char **argv)
   progName = basename(argv[0]);
   argv++; argc--;
 
-  for (; argc > 0; argv++, argc--) 
-    {
-      if (streq(*argv, "-s") || streq(*argv, "--sector"))
-	mode = bySector;
-      else if (streq(*argv, "-r") || streq(*argv, "--readonly"))
-	isReadOnly = TRUE;
-      else if (streq(*argv, "-m") || streq(*argv, "--maximize")) {
-	mode = maximized;
-	lineLength = 0;
-      }
-#ifdef HAVE_COLORS
-      else if (streq(*argv, "--color"))
-	colored = TRUE;
-#endif
-      else if (strbeginswith(*argv, "-l") || strbeginswith(*argv, "--linelength")) {
-	if (strbeginswith(*argv, "-l") && strlen(*argv) > 2)
-	  lineLength = atoi(*argv + 2);
-	else {
-	  argv++; argc--;
-	  lineLength = atoi(*argv);
-	}
-	if (lineLength < 0 || lineLength > 4096)
-	  DIE("%s: illegal line length\n")
-      } else if (streq(*argv, "--")) {
-	argv++; argc--;
-	break;
-      } else if (*argv[0] == '-')
+  int encodingCount = 0;
+  setlocale(LC_ALL, "");
+  encodings = encoding_parse(&_binary_default_enc_start, &encodingCount, &_binary_default_enc_end - &_binary_default_enc_start);
+  selectedEncoding = *encodings;
 
-	DIE(usage)
-      else break;
+  for (; argc > 0; argv++, argc--)
+  {
+    if (streq(*argv, "-s") || streq(*argv, "--sector"))
+      mode = bySector;
+    else if (streq(*argv, "-r") || streq(*argv, "--readonly"))
+      isReadOnly = TRUE;
+    else if (streq(*argv, "-m") || streq(*argv, "--maximize")) {
+	    mode = maximized;
+	    lineLength = 0;
     }
+#ifdef HAVE_COLORS
+    else if (streq(*argv, "--color"))
+	    colored = TRUE;
+#endif
+    else if (strbeginswith(*argv, "-l") || strbeginswith(*argv, "--linelength")) {
+      if (strbeginswith(*argv, "-l") && strlen(*argv) > 2)
+        lineLength = atoi(*argv + 2);
+      else {
+        argv++; argc--;
+        lineLength = atoi(*argv);
+      }
+      if (lineLength < 0 || lineLength > 4096)
+        DIE("%s: illegal line length\n")
+    } else if (streq(*argv, "--")) {
+      argv++; argc--;
+      break;
+    } else if (*argv[0] == '-')
+	    DIE(usage)
+    else
+      break;
+  }
   if (argc > 1) DIE(usage);
 
   init();

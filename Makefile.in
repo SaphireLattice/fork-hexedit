@@ -35,8 +35,16 @@ OBJS = $(SRCS:.c=.o)
 
 all: $(PRODUCT)
 
-$(PRODUCT): $(OBJS)
-	$(CC) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
+default.enc:
+	cat '$(srcdir)'/encodings/ascii.enc > default.enc
+	echo -n -e "\x1C" >> default.enc
+	cat '$(srcdir)'/encodings/ebcdic.enc >> default.enc
+
+default.enc.o: default.enc
+	ld -r -b binary -o default.enc.o default.enc  # then link in binary.o
+
+$(PRODUCT): $(OBJS) default.enc.o
+	$(CC) $(LDFLAGS) -o $@ $(OBJS) default.enc.o $(LIBS)
 
 clean:
 	rm -rf *~ *.o core *.cache config.status config.log $(PRODUCT) $(PRODUCT).1
